@@ -30,6 +30,25 @@
     border-radius: 50%;
     box-shadow: 0 0 30px #FFA500;
   }
+  #arrow {
+    position: absolute;
+    top: -20px; /* above the wheel */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 30px solid #FFD700;
+    z-index: 10;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-5px); }
+  }
+  #arrow.spin {
+    animation: bounce 0.2s ease-in-out;
+  }
   #spin-btn {
     background: #FF4500;
     border: none;
@@ -92,6 +111,7 @@
 
 <div id="wheel-container">
   <canvas id="wheel" width="400" height="400"></canvas>
+  <div id="arrow"></div>
 </div>
 <button id="spin-btn">SPIN</button>
 
@@ -121,6 +141,7 @@ const resultPopup = document.getElementById("result-popup");
 const resultImg = document.getElementById("result-img");
 const resultText = document.getElementById("result-text");
 const closePopup = document.getElementById("close-popup");
+const arrow = document.getElementById("arrow");
 
 const confettiCanvas = document.getElementById("confetti-canvas");
 const confettiCtx = confettiCanvas.getContext("2d");
@@ -194,7 +215,11 @@ closePopup.addEventListener("click", () => {
   stopConfetti();
 });
 
-spinBtn.addEventListener("click", spinWheel);
+spinBtn.addEventListener("click", () => {
+  arrow.classList.add("spin");
+  setTimeout(() => arrow.classList.remove("spin"), 200);
+  spinWheel();
+});
 
 // Confetti Animation
 let confettiParticles = [];
