@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SRM Diwali Spin the Wheel</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at 70% 20%, #fffbe7 0%, #ffd700 30%, #ff6f00 60%, #8b0000 100%);
+    color: #3a1a00;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+  .diwali-sparks {
+    pointer-events: none;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 0;
+  }
+  .site-logo-corner {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    border-radius: 24px;
+    box-shadow: 0 0 30px #ffd700, 0 0 10px #fffbe7;
+    background: #fffbe7;
+    z-index: 1001;
+    border: 3px solid #ff6f00;
+  }
+  h1 {
+    margin-top: 40px;
+    font-size: 2.5rem;
+    text-shadow: 0 0 18px #ffd700, 0 0 8px #ff6f00;
+    color: #8b0000;
+  }
+  #wheel-container {
+    position: relative;
+    margin: 40px 0;
+  }
+  #arrow {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 60px;
+    color: #3700ff;
+    z-index: 10;
+  }
+  #arrow.spinning {
+    animation: spin 20s linear infinite;
+  }
+  @keyframes spin {
+    from { transform: translateX(-50%) rotate(0deg); }
+    to { transform: translateX(-50%) rotate(360deg); }
+  }
+  canvas {
+    border-radius: 50%;
+    box-shadow: 0 0 30px #FFA500;
+  }
+  #spin-btn {
+    background: #FF4500;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    color: #fff;
+    border-radius: 10px;
+    cursor: pointer;
+    text-shadow: 0 0 5px #FFD700;
+    box-shadow: 0 0 20px #FFD700;
+    transition: transform 0.2s;
+  }
+  #spin-btn:active {
+    transform: scale(0.95);
+  }
+  #result-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff3e0;
+    color: #000;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    z-index: 1000;
+    box-shadow: 0 0 20px #FFA500;
+  }
+  #result-popup img {
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 16px;
+    margin-bottom: 18px;
+    box-shadow: 0 0 18px #ffd700;
+  }
+  #result-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ff6f00;
+    margin-bottom: 8px;
+    text-shadow: 0 0 8px #fffbe7, 0 0 4px #ffd700;
+  }
+  #close-popup {
+    margin-top: 10px;
+    padding: 8px 15px;
+    background: #FF4500;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  #confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+  }
+</style>
+</head>
+<body>
+<canvas class="diwali-sparks"></canvas>
+
+<img src="Logo.jpeg" alt="Site Logo" class="site-logo-corner">
+
+<h1>🎆 SRM Diwali Offer 🎆</h1>
+
+<div id="wheel-container">
+  <div id="arrow">▼</div>
+  <canvas id="wheel" width="400" height="400"></canvas>
+</div>
+<button id="spin-btn">SPIN</button>
+
+<div id="result-popup">
+  <img id="result-img" src="" alt="Gift">
+  <h2 id="result-text"></h2>
+  <button id="close-popup">Close</button>
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+const gifts = [
+  { name: "BLUETOOTH", price: "₹299", img: "Bluetooth.jpeg" },
+  { name: "EAR BIRDS", price: "₹549", img: "Earbirds.jpeg" },
+  { name: "BLUETOOTH", price: "₹299", img: "Bluetooth.jpeg" },
+  { name: "EARPHONES", price: "₹299", img: "Earbirds.jpeg" },
+  { name: "POWER BANK", price: "399", img: "PowerBank.jpeg" },
+  { name: "EAR BIRDS", price: "₹549", img: "Earbirds.jpeg" },
+  { name: "TRY AGAIN", price: "Better Luck Next Time!", img: "TryAgain.jpeg" },
+  { name: "POWER BANK", price: "399", img: "PowerBank.jpeg" }
+]
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const wheelRadius = canvas.width / 2;
+const spinBtn = document.getElementById("spin-btn");
+const arrow = document.getElementById("arrow");
+const resultPopup = document.getElementById("result-popup");
+const resultImg = document.getElementById("result-img");
+const resultText = document.getElementById("result-text");
+const closePopup = document.getElementById("close-popup");
+
+const confettiCanvas = document.getElementById("confetti-canvas");
+const confettiCtx = confettiCanvas.getContext("2d");
+confettiCanvas.width = window.innerWidth;
+confettiCanvas.height = window.innerHeight;
+
+// Diwali Spark/Cracker Animation
+const sparkCanvas = document.querySelector('.diwali-sparks');
+const sparkCtx = sparkCanvas.getContext('2d');
+function resizeSparks() {
+  sparkCanvas.width = window.innerWidth;
+  sparkCanvas.height = window.innerHeight;
+}
+resizeSparks();
+window.addEventListener('resize', resizeSparks);
+
+let sparks = [];
+function createSpark() {
+  const x = Math.random() * sparkCanvas.width;
+  const y = Math.random() * sparkCanvas.height * 0.7;
+  const color = `hsl(${Math.floor(Math.random()*50)+30}, 100%, 60%)`;
+  const size = Math.random() * 2 + 2;
+  const speed = Math.random() * 1.5 + 0.5;
+  const angle = Math.random() * 2 * Math.PI;
+  return {x, y, color, size, speed, angle, alpha: 1};
+}
+function updateSparks() {
+  sparkCtx.clearRect(0, 0, sparkCanvas.width, sparkCanvas.height);
+  if (sparks.length < 80) {
+    sparks.push(createSpark());
+  }
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i];
+    s.x += Math.cos(s.angle) * s.speed;
+    s.y += Math.sin(s.angle) * s.speed;
+    s.alpha -= 0.008;
+    sparkCtx.globalAlpha = Math.max(s.alpha, 0);
+    sparkCtx.beginPath();
+    sparkCtx.arc(s.x, s.y, s.size, 0, 2 * Math.PI);
+    sparkCtx.fillStyle = s.color;
+    sparkCtx.shadowColor = s.color;
+    sparkCtx.shadowBlur = 12;
+    sparkCtx.fill();
+    sparkCtx.shadowBlur = 0;
+    if (s.alpha <= 0) sparks.splice(i, 1);
+  }
+  sparkCtx.globalAlpha = 1;
+  requestAnimationFrame(updateSparks);
+}
+updateSparks();
+
+// Draw Wheel
+function drawWheel() {
+  const segmentAngle = (2 * Math.PI) / gifts.length;
+  gifts.forEach((gift, i) => {
+    const startAngle = i * segmentAngle;
+    const endAngle = startAngle + segmentAngle;
+    ctx.beginPath();
+    ctx.moveTo(wheelRadius, wheelRadius);
+    ctx.arc(wheelRadius, wheelRadius, wheelRadius, startAngle, endAngle);
+    ctx.fillStyle = i % 2 === 0 ? "#FFA500" : "#FF6347";
+    ctx.fill();
+    ctx.save();
+    ctx.translate(wheelRadius, wheelRadius);
+    ctx.rotate(startAngle + segmentAngle / 2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 14px Arial";
+    ctx.fillText(gift.name, wheelRadius - 10, 10);
+    ctx.restore();
+  });
+}
+
+function drawArrow() {
+  ctx.fillStyle = "#FFD700";
+  ctx.strokeStyle = "#FFD700";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(200, 10);
+  ctx.lineTo(185, 30);
+  ctx.lineTo(215, 30);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+}
+
+drawWheel();
+
+let spinning = false;
+let spinAngle = 0;
+let spinVelocity = 0;
+
+function spinWheel() {
+  if (spinning) return;
+  spinning = true;
+  arrow.classList.add("spinning");
+  spinVelocity = Math.random() * 0.3 + 0.3;
+  const spinInterval = setInterval(() => {
+    spinAngle += spinVelocity;
+    spinVelocity *= 0.97; // friction
+    drawRotatedWheel(spinAngle);
+    if (spinVelocity < 0.002) {
+      clearInterval(spinInterval);
+      spinning = false;
+      arrow.classList.remove("spinning");
+      const winnerIndex = gifts.length - 1 - Math.floor((spinAngle % (2 * Math.PI)) / ((2 * Math.PI) / gifts.length));
+      showResult(winnerIndex);
+    }
+  }, 16);
+}
+
+function drawRotatedWheel(angle) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(wheelRadius, wheelRadius);
+  ctx.rotate(angle);
+  ctx.translate(-wheelRadius, -wheelRadius);
+  drawWheel();
+  ctx.restore();
+}
+
+function showResult(index) {
+  const gift = gifts[index];
+  resultImg.src = gift.img;
+  resultText.innerText = `${gift.name} - ${gift.price}`;
+  resultPopup.style.display = "block";
+  startConfetti();
+}
+
+closePopup.addEventListener("click", () => {
+  resultPopup.style.display = "none";
+  stopConfetti();
+});
+
+spinBtn.addEventListener("click", spinWheel);
+
+// Confetti Animation
+let confettiParticles = [];
+let confettiActive = false;
+function startConfetti() {
+  confettiActive = true;
+  confettiParticles = [];
+  for (let i = 0; i < 150; i++) {
+    confettiParticles.push({
+      x: Math.random() * confettiCanvas.width,
+      y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+      r: Math.random() * 6 + 4,
+      d: Math.random() * 20 + 10,
+      color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+      tilt: Math.random() * 10 - 10
+    });
+  }
+  requestAnimationFrame(updateConfetti);
+}
+
+function stopConfetti() {
+  confettiActive = false;
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+}
+
+function updateConfetti() {
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  confettiParticles.forEach(p => {
+    p.y += 2;
+    p.x += Math.sin(p.d) * 0.5;
+    p.tilt += 0.1;
+    confettiCtx.fillStyle = p.color;
+    confettiCtx.beginPath();
+    confettiCtx.moveTo(p.x + p.tilt, p.y);
+    confettiCtx.lineTo(p.x + p.tilt + 5, p.y + p.r);
+    confettiCtx.lineTo(p.x + p.tilt - 5, p.y + p.r);
+    confettiCtx.closePath();
+    confettiCtx.fill();
+    if (p.y > confettiCanvas.height) p.y = -10;
+  });
+  if (confettiActive) requestAnimationFrame(updateConfetti);
+}
+</script>
+
+</body>
+</html>
