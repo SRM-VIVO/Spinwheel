@@ -7,7 +7,7 @@
 <style>
   body {
     margin: 0;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Segoe UI', 'Arial', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
     background: radial-gradient(circle at 70% 20%, #fffbe7 0%, #ffd700 30%, #ff6f00 60%, #8b0000 100%);
     color: #3a1a00;
     display: flex;
@@ -129,6 +129,49 @@
     height: 100%;
     z-index: 999;
   }
+  @media (max-width: 600px) {
+    h1 {
+      font-size: 1.5rem;
+      margin-top: 18px;
+    }
+    .site-logo-corner {
+      width: 70px;
+      height: 70px;
+      top: 8px;
+      left: 8px;
+      border-radius: 14px;
+      border-width: 2px;
+    }
+    #wheel-container {
+      margin: 18px 0;
+    }
+    #arrow {
+      font-size: 32px;
+      top: -32px;
+    }
+    canvas#wheel {
+      width: 220px !important;
+      height: 220px !important;
+    }
+    #spin-btn {
+      font-size: 1.1rem;
+      padding: 10px 18px;
+    }
+    #result-popup img {
+      width: 110px;
+      height: 110px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    #result-text {
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+    #result-popup {
+      padding: 10px;
+      border-radius: 10px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -227,11 +270,15 @@ updateSparks();
 // Draw Wheel
 function drawWheel() {
   const segmentAngle = (2 * Math.PI) / gifts.length;
-
-  // Further increase label font size for maximum prominence
-  const labelFontSize = Math.max(48, Math.floor(wheelRadius / 2.8)); // Even larger font size
-  const labelOffset = Math.max(36, Math.floor(wheelRadius / 5)); // Further from center
-
+  // Responsive label font size
+  let labelFontSize, labelOffset;
+  if (window.innerWidth <= 600) {
+    labelFontSize = Math.max(28, Math.floor(wheelRadius / 3.5));
+    labelOffset = Math.max(20, Math.floor(wheelRadius / 4));
+  } else {
+    labelFontSize = Math.max(48, Math.floor(wheelRadius / 2.8));
+    labelOffset = Math.max(36, Math.floor(wheelRadius / 5));
+  }
   gifts.forEach((gift, i) => {
     const startAngle = i * segmentAngle;
     const endAngle = startAngle + segmentAngle;
@@ -246,7 +293,7 @@ function drawWheel() {
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#fff";
-    ctx.font = `bold ${labelFontSize}px Arial`;
+    ctx.font = `bold ${labelFontSize}px 'Segoe UI', 'Arial', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif`;
     ctx.fillText(gift.label, wheelRadius - labelOffset, 0);
     ctx.restore();
   });
