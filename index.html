@@ -56,13 +56,6 @@
     color: #3700ff;
     z-index: 10;
   }
-  #arrow.spinning {
-    animation: spin 20s linear infinite;
-  }
-  @keyframes spin {
-    from { transform: translateX(-50%) rotate(0deg); }
-    to { transform: translateX(-50%) rotate(360deg); }
-  }
   canvas {
     border-radius: 50%;
     box-shadow: 0 0 30px #FFA500;
@@ -267,6 +260,88 @@ function updateSparks() {
 }
 updateSparks();
 
+// Diwali Firecracker Animation (rockets and sky shots)
+let fireworks = [];
+function launchRocket() {
+  const x = Math.random() * sparkCanvas.width * 0.8 + sparkCanvas.width * 0.1;
+  const y = sparkCanvas.height;
+  const color = `hsl(${Math.floor(Math.random()*360)}, 100%, 60%)`;
+  const speed = Math.random() * 3 + 4;
+  const targetY = Math.random() * sparkCanvas.height * 0.4 + sparkCanvas.height * 0.2;
+  fireworks.push({x, y, color, speed, targetY, exploded: false, sparks: []}); // remove logoSparks
+}
+function updateFireworks() {
+  // Launch new rocket occasionally
+  if (Math.random() < 0.03) launchRocket();
+  for (let i = fireworks.length - 1; i >= 0; i--) {
+    let fw = fireworks[i];
+    if (!fw.exploded) {
+      fw.y -= fw.speed;
+      // Draw rocket
+      sparkCtx.save();
+      sparkCtx.beginPath();
+      sparkCtx.arc(fw.x, fw.y, 5, 0, 2 * Math.PI);
+      sparkCtx.fillStyle = fw.color;
+      sparkCtx.shadowColor = fw.color;
+      sparkCtx.shadowBlur = 10;
+      sparkCtx.fill();
+      sparkCtx.shadowBlur = 0;
+      sparkCtx.restore();
+      // Trail
+      sparkCtx.save();
+      sparkCtx.beginPath();
+      sparkCtx.moveTo(fw.x, fw.y);
+      sparkCtx.lineTo(fw.x, fw.y + 18);
+      sparkCtx.strokeStyle = '#fff';
+      sparkCtx.lineWidth = 2;
+      sparkCtx.globalAlpha = 0.5;
+      sparkCtx.stroke();
+      sparkCtx.globalAlpha = 1;
+      sparkCtx.restore();
+      if (fw.y <= fw.targetY) {
+        fw.exploded = true;
+        // Create only colored sparks
+        for (let j = 0; j < 32; j++) {
+          const angle = (2 * Math.PI * j) / 32;
+          const speed = Math.random() * 3 + 2;
+          fw.sparks.push({
+            x: fw.x,
+            y: fw.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            alpha: 1,
+            color: fw.color
+          });
+        }
+      }
+    } else {
+      // Update and draw sparks
+      for (let k = fw.sparks.length - 1; k >= 0; k--) {
+        let s = fw.sparks[k];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.vy += 0.05; // gravity
+        s.alpha -= 0.018;
+        sparkCtx.save();
+        sparkCtx.globalAlpha = Math.max(s.alpha, 0);
+        sparkCtx.beginPath();
+        sparkCtx.arc(s.x, s.y, 3, 0, 2 * Math.PI);
+        sparkCtx.fillStyle = s.color;
+        sparkCtx.shadowColor = s.color;
+        sparkCtx.shadowBlur = 8;
+        sparkCtx.fill();
+        sparkCtx.shadowBlur = 0;
+        sparkCtx.restore();
+        if (s.alpha <= 0) fw.sparks.splice(k, 1);
+      }
+      // Remove firework if all sparks faded
+      if (fw.sparks.length === 0) fireworks.splice(i, 1);
+    }
+  }
+  requestAnimationFrame(updateFireworks);
+}
+updateFireworks();
+
 // Draw Wheel
 function drawWheel() {
   const segmentAngle = (2 * Math.PI) / gifts.length;
@@ -321,16 +396,19 @@ let spinVelocity = 0;
 function spinWheel() {
   if (spinning) return;
   spinning = true;
-  arrow.classList.add("spinning");
-  spinVelocity = Math.random() * 0.3 + 0.3;
+  // Remove arrow animation for static arrow
+  arrow.classList.remove("spinning");
+  spinVelocity = Math.random() * 0.28 + 0.28; // more velocity for lively spin
+  let elapsed = 0;
+  const minSpinTime = 5000; // reduced for instant result
   const spinInterval = setInterval(() => {
     spinAngle += spinVelocity;
-    spinVelocity *= 0.97; // friction
+    spinVelocity *= 0.992;
     drawRotatedWheel(spinAngle);
-    if (spinVelocity < 0.002) {
+    elapsed += 16;
+    if (elapsed >= minSpinTime && spinVelocity < 0.012) { // lower threshold for popup after wheel stops
       clearInterval(spinInterval);
       spinning = false;
-      arrow.classList.remove("spinning");
       const winnerIndex = gifts.length - 1 - Math.floor((spinAngle % (2 * Math.PI)) / ((2 * Math.PI) / gifts.length));
       showResult(winnerIndex);
     }
@@ -403,6 +481,10 @@ function updateConfetti() {
   });
   if (confettiActive) requestAnimationFrame(updateConfetti);
 }
+
+// Preload logo image for burst effect
+const burstLogoImg = new window.Image();
+burstLogoImg.src = 'Logo.jpeg';
 </script>
 
 </body>
