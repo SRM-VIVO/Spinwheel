@@ -227,6 +227,11 @@ updateSparks();
 // Draw Wheel
 function drawWheel() {
   const segmentAngle = (2 * Math.PI) / gifts.length;
+
+  // Make label font size dynamic based on wheel size so emojis/text are larger and readable
+  const labelFontSize = Math.max(16, Math.floor(wheelRadius / 7)); // e.g., 200/7 ≈ 28px for a 400x400 canvas
+  const labelOffset = Math.max(20, Math.floor(wheelRadius / 8)); // distance from center to render label
+
   gifts.forEach((gift, i) => {
     const startAngle = i * segmentAngle;
     const endAngle = startAngle + segmentAngle;
@@ -239,9 +244,11 @@ function drawWheel() {
     ctx.translate(wheelRadius, wheelRadius);
     ctx.rotate(startAngle + segmentAngle / 2);
     ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
     ctx.fillStyle = "#fff";
-    ctx.font = "bold 14px Arial";
-    ctx.fillText(gift.label, wheelRadius - 10, 10);
+    ctx.font = `bold ${labelFontSize}px Arial`;
+    // Draw the label (emoji or short symbol) closer to the edge and larger
+    ctx.fillText(gift.label, wheelRadius - labelOffset, 0);
     ctx.restore();
   });
 }
@@ -354,6 +361,3 @@ function updateConfetti() {
 
 </body>
 </html>
-
-
-
