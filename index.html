@@ -164,6 +164,24 @@
       padding: 10px;
       border-radius: 10px;
     }
+    /* Form and CSV button styles */
+    #customer-form, #download-csv {
+      max-width: 98vw !important;
+      width: 98vw !important;
+      padding: 10px 2vw !important;
+      font-size: 1rem !important;
+    }
+    #customer-form label {
+      font-size: 0.98rem !important;
+    }
+    #customer-form input {
+      font-size: 1rem !important;
+      padding: 10px !important;
+    }
+    #customer-form button, #download-csv {
+      font-size: 1.05rem !important;
+      padding: 12px 0 !important;
+    }
   }
 </style>
 </head>
@@ -481,6 +499,83 @@ function updateConfetti() {
   });
   if (confettiActive) requestAnimationFrame(updateConfetti);
 }
+
+// Add customer form and CSV logic
+const formHtml = `
+  <form id="customer-form" style="margin-bottom:24px; background:#fffbe7; padding:18px 24px; border-radius:12px; box-shadow:0 0 10px #ffd700; max-width:340px; width:100%; box-sizing:border-box;">
+    <label style="display:block;margin-bottom:12px;font-size:1rem;">Name:<br><input type="text" id="cust-name" required style="width:100%;padding:10px;margin-top:4px;font-size:1rem;border-radius:6px;border:1px solid #ffd700;box-sizing:border-box;" autocomplete="name" inputmode="text"></label>
+    <label style="display:block;margin-bottom:12px;font-size:1rem;">Mobile Number:<br><input type="tel" id="cust-mobile" required pattern="[0-9]{10}" maxlength="10" style="width:100%;padding:10px;margin-top:4px;font-size:1rem;border-radius:6px;border:1px solid #ffd700;box-sizing:border-box;" autocomplete="tel" inputmode="numeric"></label>
+    <label style="display:block;margin-bottom:12px;font-size:1rem;">Invoice Number:<br><input type="text" id="cust-invoice" required style="width:100%;padding:10px;margin-top:4px;font-size:1rem;border-radius:6px;border:1px solid #ffd700;box-sizing:border-box;" autocomplete="off" inputmode="text"></label>
+    <button type="submit" style="background:#FF4500;color:#fff;padding:12px 0;width:100%;font-size:1.1rem;border:none;border-radius:8px;cursor:pointer;box-shadow:0 0 6px #ffd700;">Submit & Spin</button>
+  </form>
+  <button id="download-csv" style="display:none;margin-bottom:18px;background:#FFD700;color:#8b0000;padding:12px 0;width:100%;font-size:1.1rem;border:none;border-radius:8px;cursor:pointer;box-shadow:0 0 6px #ffd700;max-width:340px;">Download All Entries (CSV)</button>
+`;
+document.body.insertAdjacentHTML('afterbegin', formHtml);
+const customerForm = document.getElementById('customer-form');
+const downloadBtn = document.getElementById('download-csv');
+let csvRows;
+// Load CSV from localStorage if exists
+const csvKey = 'diwali_spin_csv';
+const csvHeader = "Name,Mobile,Invoice,Gift,Price,DateTime";
+if (localStorage.getItem(csvKey)) {
+  csvRows = JSON.parse(localStorage.getItem(csvKey));
+  // If header missing (old data), add it
+  if (!csvRows[0] || !csvRows[0].startsWith('Name,')) csvRows.unshift(csvHeader);
+} else {
+  csvRows = [csvHeader];
+}
+
+// Hide spin button until form is filled
+spinBtn.style.display = 'none';
+
+customerForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  spinBtn.style.display = '';
+  customerForm.style.display = 'none';
+  // Save details for CSV
+  spinBtn.dataset.custName = document.getElementById('cust-name').value;
+  spinBtn.dataset.custMobile = document.getElementById('cust-mobile').value;
+  spinBtn.dataset.custInvoice = document.getElementById('cust-invoice').value;
+});
+
+// On spin, append to CSV
+const origShowResult = showResult;
+showResult = function(index) {
+  const gift = gifts[index];
+  origShowResult(index);
+  // Save to CSV
+  const now = new Date().toLocaleString();
+  const row = [
+    '"'+(spinBtn.dataset.custName||'')+'"',
+    '"'+(spinBtn.dataset.custMobile||'')+'"',
+    '"'+(spinBtn.dataset.custInvoice||'')+'"',
+    '"'+gift.name+'"',
+    '"'+gift.price+'"',
+    '"'+now+'"'
+  ].join(',');
+  csvRows.push(row);
+  localStorage.setItem(csvKey, JSON.stringify(csvRows));
+  downloadBtn.style.display = '';
+  // Reset form for next customer
+  setTimeout(()=>{
+    customerForm.reset();
+    customerForm.style.display = '';
+    spinBtn.style.display = 'none';
+  }, 2000);
+};
+
+downloadBtn.addEventListener('click', function() {
+  const csvContent = csvRows.join('\r\n');
+  const blob = new Blob([csvContent], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'diwali_spin_entries.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
 
 // Preload logo image for burst effect
 const burstLogoImg = new window.Image();
