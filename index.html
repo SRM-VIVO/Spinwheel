@@ -190,7 +190,8 @@
 
 <img src="Logo.jpeg" alt="Site Logo" class="site-logo-corner">
 
-<h1>🎆 SRM Diwali Offer 🎆</h1>
+<h1>🎆 Vivo Exclusive Showroom Hoodi
+  Santosh Mobile store Point 🎆</h1>
 
 <div id="wheel-container">
   <div id="arrow">▼</div>
@@ -208,14 +209,14 @@
 
 <script>
 const gifts = [
-  { label: "🎉", name: "BLUETOOTH", price: "₹299", img: "Bluetooth.jpeg" },
-  { label: "🎁", name: "EAR BIRDS", price: "₹549", img: "Earbirds.jpeg" },
-  { label: "🪔", name: "BLUETOOTH", price: "₹299", img: "Bluetooth.jpeg" },
-  { label: "🏆", name: "EARPHONES", price: "₹299", img: "Earbirds.jpeg" },
-  { label: "🎈", name:"POWER BANK", price: "399", img: "PowerBank.jpeg" },
-  { label: "🎊", name: "EAR BIRDS", price: "₹549", img: "Earbirds.jpeg" },
+  { label: "🎉", name: "BLUETOOTH", price: "199", img: "Bluetooth.jpeg" },
+  { label: "🎁", name: "EAR BIRDS", price: "₹399", img: "Earbirds.jpeg" },
+  { label: "🪔", name: "FREE", price: "₹0", img: "FREE_1.jpeg" },
+  { label: "🏆", name: "EARPHONES", price: "₹399", img: "Earbirds.jpeg" },
+  { label: "🎈", name:"POWER BANK", price: "₹299", img: "PowerBank.jpeg" },
+  { label: "🎊", name: "FREE", price: "₹0", img: "FREE.jpeg" },
   { label: "🎈", name: "TRY AGAIN", price: "Better Luck Next Time!", img: "TryAgain.jpeg" },
-  { label: "🎉", name: "POWER BANK", price: "399", img: "PowerBank.jpeg" }
+  { label: "🎉", name: "COMBO OFFER", price: "₹1299", img: "COMBO.jpeg" }
 ]
 
 const canvas = document.getElementById("wheel");
@@ -565,6 +566,11 @@ showResult = function(index) {
 };
 
 downloadBtn.addEventListener('click', function() {
+  const password = prompt('Enter password to download CSV:');
+  if (password !== 'SRM12345') {
+    alert('Incorrect password!');
+    return;
+  }
   const csvContent = csvRows.join('\r\n');
   const blob = new Blob([csvContent], {type: 'text/csv'});
   const url = URL.createObjectURL(blob);
